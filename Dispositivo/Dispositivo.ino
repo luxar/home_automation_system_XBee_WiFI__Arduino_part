@@ -32,7 +32,7 @@ ZBRxResponse rx = ZBRxResponse();
 ModemStatusResponse msr = ModemStatusResponse();
 
 // SH + SL Address of receiving XBee
-XBeeAddress64 addr64 = XBeeAddress64(0x00000000, 0x0000FFFF);
+XBeeAddress64 addr64 = XBeeAddress64(0x00000000, 0x00000000);
 
 ZBTxStatusResponse txStatus = ZBTxStatusResponse();
 
@@ -88,14 +88,21 @@ void loop() {
         }
         // set dataLed PWM to value of the first byte in the data
         analogWrite(dataLed, rx.getData(0));
-        uint8_t mensaje[100];
+        char from[]="hola mundo mundial";
         
+        uint8_t to[sizeof(from)];
+        memcpy(to, from, sizeof(from));
+//        char from[100];
+//        char * pfrom[100] = &from;
+//       uint8_t to;
+//        to = *pfrom;
+//          uint8_t mensaje[100];
 //         for (int i = 0; i < rx.getDataLength(); i++) {
 //         mensaje[i]=rx.getData()[i];
 //        }
-        int numero=25;
-        itoa (numero,mensaje,10);
-       ZBTxRequest zbTx = ZBTxRequest(addr64, mensaje, sizeof(mensaje));
+        //int numero=25;
+        //itoa (numero,mensaje,10);
+       ZBTxRequest zbTx = ZBTxRequest(addr64, to, sizeof(to));
         xbee.send(zbTx);
         
         

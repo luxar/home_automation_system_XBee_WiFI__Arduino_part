@@ -40,12 +40,15 @@ int statusLed = 10;
 int errorLed = 12;
 int dataLed = 11;
 int led1 = 9;
-boolean led1b= false;
-boolean led2b= false;
+int inPinD = 7;
+int inPinC = 15;
 int led2 = 8;
 uint8_t who = 'Q';
 uint8_t toread = 'R';
 uint8_t towrite = 'W';
+boolean led1b;
+uint8_t led2H;
+uint8_t led2L;
 void flashLed(int pin, int times, int wait) {
 
 	for (int i = 0; i < times; i++) {
@@ -65,9 +68,14 @@ void setup() {
 	pinMode(dataLed,  OUTPUT);
 	pinMode(led1,  OUTPUT);
 	pinMode(led2,  OUTPUT);
+        pinMode(inPinD,  INPUT);
+        pinMode(inPinC,  INPUT);
 	// start serial
 	Serial.begin(9600);
 	xbee.begin(Serial);
+        led1b = false;
+        led2L=0;
+        led2H=0;
 
 	flashLed(statusLed, 3, 50);
 }
@@ -94,21 +102,79 @@ void loop() {
 				flashLed(statusLed, 3, 50);
 			}
 			uint8_t comando = rx.getData(0);
+                        // se lee el primer byte que informa que tipo de peticion es
 			if (comando==who){
+                                //entra una peticion who, arduino debe dar su numero de serie
 				uint8_t msg[]="AA0001";
 				ZBTxRequest zbTx = ZBTxRequest(addr64, msg, sizeof(msg));
 				xbee.send(zbTx);
 				flashLed(dataLed, 3, 50);
 			}else if(comando==toread){
-				uint8_t msg[]="lectura de  datos";
-				ZBTxRequest zbTx = ZBTxRequest(addr64, msg, sizeof(msg));
+                                //peticion de lectura de uno de los puertos
+                                if(rx.getData(1)==0x01){
+                                  //peticion de estado del led 1
+                                 uint8_t mensaje[4];    
+                                mensaje[0]=toread;
+                                mensaje[1]=0x01;
+                                 mensaje[2]=0x00;
+                                 if(led1b==true){
+                                   mensaje[3]=0xFF;
+                                   }else{
+                                     mensaje[3]=0x00;
+                                     }
+                                 ZBTxRequest zbTx = ZBTxRequest(addr64, mensaje, sizeof(mensaje));
 				xbee.send(zbTx);
 				flashLed(dataLed, 3, 50);
+				}else if(rx.getData(1)==0x02){
+			        uint8_t mensaje[4];    
+                                mensaje[0]=toread;
+                                mensaje[1]=0x02;
+                                mensaje[2]=led2H;
+                                mensaje[3]=led2L;
+                                ZBTxRequest zbTx = ZBTxRequest(addr64, mensaje, sizeof(mensaje));
+				xbee.send(zbTx);
+                                }else if(rx.getData(1)==0x03){	
+                                  // int pin7 = analogRead(inPinD);
+                                   
+                                   uint8_t mensaje[4];    
+                                    mensaje[0]=toread;
+                                    mensaje[1]=0x03;
+                                    if (digitalRead(inPinD) == HIGH){
+                                    mensaje[2]=0x00; 
+                                        mensaje[3]=0xFF; 
+                                  }else{
+                                  mensaje[2]=0x00; 
+                                        mensaje[3]=0x00;
+                                  }
+                                   
+                                ZBTxRequest zbTx = ZBTxRequest(addr64, mensaje, sizeof(mensaje));
+				xbee.send(zbTx);
+                                  
+                                  		
+				}else if(rx.getData(1)==0x04){	
+                                   int pin15 = analogRead(inPinC);
+                                   
+                                   uint8_t mensaje[4];    
+                                    mensaje[0]=toread;
+                                    mensaje[1]=0x04;
+                                    mensaje[2]=pin15 >> 8 & 0xff;;
+                                   mensaje[3]=pin15 & 0xff;
+                                ZBTxRequest zbTx = ZBTxRequest(addr64, mensaje, sizeof(mensaje));
+				xbee.send(zbTx);
+                                  
+                                  		
+				}else{
+					flashLed(errorLed, 2, 50);
+				}
+				uint8_t msg[]="lectura de  datos";
+                                
+				
 
 			}else if(comando==towrite){
-
+                                 //peticion de escritura
 				if(rx.getData(1)==0x01){
-					if(rx.getData(2)==0x00){
+                                        //escritura booleana
+					if(rx.getData(3)==0x00){
 						digitalWrite(led1, LOW);
 						led1b= false;
 					}else{
@@ -118,70 +184,74 @@ void loop() {
 					}
 
 				}else if(rx.getData(1)==0x02){
-					if(rx.getData(2)==0x00){
-						digitalWrite(led2, LOW);
-						led2b= false;
-					}else{
-						digitalWrite(led2, HIGH);
-						led2b= true;
-					}
-					}else{
-						flashLed(errorLed, 2, 50);
-                                        }
+					//escritura analogica
+					analogWrite(led2,rx.getData(3));
+                                        uint8_t valorRecibido[2];
+                                        led2L=rx.getData(3);
+                                        
+                                        led2H=rx.getData(2);
+                                        int valorIntermedio;
+                                         //memcpy(&led2i, &valorRecibido, sizeof(led2i));
+                                         //analogWrite(led2, led2i);
+                                       
+                                        //					if(rx.getData(2)==0x00){
+					//						digitalWrite(led2, LOW);
+					//						led2b= false;
+					//					}else{
+					//						digitalWrite(led2, HIGH);
+					//						led2b= true;
+					//					}
+				}else{
+					flashLed(errorLed, 2, 50);
+				}
 
-
-
-						uint8_t msg[]="escritura de datos";
-					ZBTxRequest zbTx = ZBTxRequest(addr64, msg, sizeof(msg));
-					xbee.send(zbTx);
-					flashLed(dataLed, 3, 50);
 			}else{
 				flashLed(errorLed, 3, 50);
 			}
 
 
 
-				// set dataLed PWM to value of the first byte in the data
-				//        analogWrite(dataLed, rx.getData(0));
-				//        
-				//        
-				//        char from[]="hola mundo mundial";
-				//        
-				//        uint8_t to[sizeof(from)];
-				//        memcpy(to, from, sizeof(from));
-				//        char from[100];
-				//        char * pfrom[100] = &from;
-				//       uint8_t to;
-				//        to = *pfrom;
-				//          uint8_t mensaje[100];
-				//         for (int i = 0; i < rx.getDataLength(); i++) {
-				//         mensaje[i]=rx.getData()[i];
-				//        }
+			// set dataLed PWM to value of the first byte in the data
+			//        analogWrite(dataLed, rx.getData(0));
+			//        
+			//        
+			//        char from[]="hola mundo mundial";
+			//        
+			//        uint8_t to[sizeof(from)];
+			//        memcpy(to, from, sizeof(from));
+			//        char from[100];
+			//        char * pfrom[100] = &from;
+			//       uint8_t to;
+			//        to = *pfrom;
+			//          uint8_t mensaje[100];
+			//         for (int i = 0; i < rx.getDataLength(); i++) {
+			//         mensaje[i]=rx.getData()[i];
+			//        }
 
 
 
 
 
-			} else if (xbee.getResponse().getApiId() == MODEM_STATUS_RESPONSE) {
-				xbee.getResponse().getModemStatusResponse(msr);
-				// the local XBee sends this response on certain events, like association/dissociation
+		} else if (xbee.getResponse().getApiId() == MODEM_STATUS_RESPONSE) {
+			xbee.getResponse().getModemStatusResponse(msr);
+			// the local XBee sends this response on certain events, like association/dissociation
 
-				if (msr.getStatus() == ASSOCIATED) {
-					// yay this is great.  flash led
-					flashLed(statusLed, 10, 10);
-				} else if (msr.getStatus() == DISASSOCIATED) {
-					// this is awful.. flash led to show our discontent
-					flashLed(errorLed, 5, 50);
-				} else {
-					// another status
-					flashLed(statusLed, 5, 10);
-				}
+			if (msr.getStatus() == ASSOCIATED) {
+				// yay this is great.  flash led
+				flashLed(statusLed, 10, 10);
+			} else if (msr.getStatus() == DISASSOCIATED) {
+				// this is awful.. flash led to show our discontent
+				flashLed(errorLed, 5, 50);
 			} else {
-				// not something we were expecting
-				// flashLed(led1, 1, 25);    
+				// another status
+				flashLed(statusLed, 5, 10);
 			}
-		} else if (xbee.getResponse().isError()) {
-			//nss.print("Error reading packet.  Error code: ");  
-			//nss.println(xbee.getResponse().getErrorCode());
+		} else {
+			// not something we were expecting
+			// flashLed(led1, 1, 25);    
 		}
+	} else if (xbee.getResponse().isError()) {
+		//nss.print("Error reading packet.  Error code: ");  
+		//nss.println(xbee.getResponse().getErrorCode());
 	}
+}

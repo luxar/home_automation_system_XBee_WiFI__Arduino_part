@@ -87,10 +87,10 @@ void loop() {
 
 	if (xbee.getResponse().isAvailable()) {
 		// got something
-
+                
 		if (xbee.getResponse().getApiId() == ZB_RX_RESPONSE) {
 			// got a zb rx packet
-
+                        flashLed(statusLed, 1, 50);
 			// now fill our zb rx class
 			xbee.getResponse().getZBRxResponse(rx);
 
@@ -103,6 +103,7 @@ void loop() {
 			}
 			uint8_t comando = rx.getData(0);
                         // se lee el primer byte que informa que tipo de peticion es
+                        
 			if (comando==who){
                                 //entra una peticion who, arduino debe dar su numero de serie
 				uint8_t msg[]="AA0001";
@@ -133,6 +134,7 @@ void loop() {
                                 mensaje[3]=led2L;
                                 ZBTxRequest zbTx = ZBTxRequest(addr64, mensaje, sizeof(mensaje));
 				xbee.send(zbTx);
+                                flashLed(dataLed, 3, 50);
                                 }else if(rx.getData(1)==0x03){	
                                   // int pin7 = analogRead(inPinD);
                                    
@@ -149,7 +151,7 @@ void loop() {
                                    
                                 ZBTxRequest zbTx = ZBTxRequest(addr64, mensaje, sizeof(mensaje));
 				xbee.send(zbTx);
-                                  
+                                  flashLed(dataLed, 3, 50);
                                   		
 				}else if(rx.getData(1)==0x04){	
                                    int pin15 = analogRead(inPinC);
@@ -161,7 +163,7 @@ void loop() {
                                    mensaje[3]=pin15 & 0xff;
                                 ZBTxRequest zbTx = ZBTxRequest(addr64, mensaje, sizeof(mensaje));
 				xbee.send(zbTx);
-                                  
+                                  flashLed(dataLed, 3, 50);
                                   		
 				}else{
 					flashLed(errorLed, 2, 50);

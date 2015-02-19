@@ -76,7 +76,8 @@ void setup() {
         led1b = false;
         led2L=0;
         led2H=0;
-
+        flashLed(errorLed, 1, 50);
+flashLed(dataLed, 3, 50);
 	flashLed(statusLed, 3, 50);
 }
 
@@ -106,7 +107,7 @@ void loop() {
                         
 			if (comando==who){
                                 //entra una peticion who, arduino debe dar su numero de serie
-				uint8_t msg[]="AA0001";
+				uint8_t msg[]={'Q',0,0,0,1};
 				ZBTxRequest zbTx = ZBTxRequest(addr64, msg, sizeof(msg));
 				xbee.send(zbTx);
 				flashLed(dataLed, 3, 50);

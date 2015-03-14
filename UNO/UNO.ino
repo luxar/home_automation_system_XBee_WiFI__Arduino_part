@@ -229,9 +229,11 @@ void loop() {
 
 			}else if(comando==towrite){
                                  //peticion de escritura
-				if(rx.getData(1)==0x05){
+                                 
+                                 for(int dirR=1;dirR<rx.getDataLength();dirR++){
+                                   if(rx.getData(dirR)==0x05){
                                         //escritura led 1
-					if(rx.getData(3)==0x00){
+					if(rx.getData(dirR+2)==0x00){
 						digitalWrite(led1, LOW);
 						led1b= false;
 					}else{
@@ -240,18 +242,18 @@ void loop() {
 
 					}
 
-				}else if(rx.getData(1)==0x06){
+				}else if(rx.getData(dirR)==0x06){
 					//escritura analogica led 2
-					analogWrite(led2,rx.getData(3));
-                                        uint8_t valorRecibido[2];
-                                        led2L=rx.getData(3);
+					analogWrite(led2,rx.getData(dirR+2));
                                         
-                                        led2H=rx.getData(2);
-                                        int valorIntermedio;
+                                        led2L=rx.getData(dirR+2);
+                                        
+                                        led2H=rx.getData(dirR+1);
+                                        
                                          
-				}else if(rx.getData(1)==0x01){
+				}else if(rx.getData(dirR)==0x01){
 					//escritura rele 1
-					if(rx.getData(3)==0x00){
+					if(rx.getData(dirR+2)==0x00){
 						digitalWrite(rele1, LOW);
 						vrele1= false;
 					}else{
@@ -260,9 +262,9 @@ void loop() {
 
 					}
                                          
-				}else if(rx.getData(1)==0x02){
+				}else if(rx.getData(dirR)==0x02){
 					//escritura rele2
-					if(rx.getData(3)==0x00){
+					if(rx.getData(dirR+2)==0x00){
 						digitalWrite(rele2, LOW);
 						vrele2= false;
 					}else{
@@ -271,9 +273,9 @@ void loop() {
 
 					}
                                          
-				}else if(rx.getData(1)==0x03){
+				}else if(rx.getData(dirR)==0x03){
 					//escritura rele3
-					if(rx.getData(3)==0x00){
+					if(rx.getData(dirR+2)==0x00){
 						digitalWrite(rele3, LOW);
 						vrele3= false;
 					}else{
@@ -282,9 +284,9 @@ void loop() {
 
 					}
                                          
-				}else if(rx.getData(1)==0x04){
+				}else if(rx.getData(dirR)==0x04){
 					//escritura rele 4
-					if(rx.getData(3)==0x00){
+					if(rx.getData(dirR+2)==0x00){
 						digitalWrite(rele4, LOW);
 						vrele4= false;
 					}else{
@@ -296,6 +298,11 @@ void loop() {
 				}else{
 					flashLed(errorLed, 2, 50);
 				}
+                                dirR++;
+                                dirR++;
+
+                                   }//final bucle
+				
 
 			}else{
 				flashLed(errorLed, 3, 50);

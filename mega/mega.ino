@@ -101,7 +101,7 @@ void loop() {
 
 			if (comando==who){
 				//entra una peticion who, arduino debe dar su numero de serie
-				uint8_t msg[]="AA0001";
+				uint8_t msg[]={'Q',0,0,0,3};
 				ZBTxRequest zbTx = ZBTxRequest(addr64, msg, sizeof(msg));
 				xbee.send(zbTx);
 				flashLed(dataLed, 1, 50);
@@ -112,7 +112,7 @@ void loop() {
 
 					uint8_t mensaje[4];    
 					mensaje[0]=toread;
-					mensaje[1]=0x03;
+					mensaje[1]=0x01;
 					if (digitalRead(inPinD) == HIGH){
 						mensaje[2]=0x00; 
 						mensaje[3]=0xFF; 
@@ -129,7 +129,7 @@ void loop() {
 
 					uint8_t mensaje[4];    
 					mensaje[0]=toread;
-					mensaje[1]=0x04;
+					mensaje[1]=0x02;
 					mensaje[2]=pin15 >> 8 & 0xff;;
 					mensaje[3]=pin15 & 0xff;
 					ZBTxRequest zbTx = ZBTxRequest(addr64, mensaje, sizeof(mensaje));

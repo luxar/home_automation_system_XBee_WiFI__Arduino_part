@@ -57,8 +57,10 @@ boolean vrele1;
 boolean vrele2;
 boolean vrele3;
 boolean vrele4;
+uint8_t myArray [100];
 
-
+int dirIn=0;
+int dirOut=0;
 void flashLed(int pin, int times, int wait) {
 
 	for (int i = 0; i < times; i++) {
@@ -118,7 +120,10 @@ void loop() {
 			}
 			uint8_t comando = rx.getData(0);
                         // se lee el primer byte que informa que tipo de peticion es
-                        
+                         //if (myArray != 0) {
+                              //    delete [] myArray;
+                             //   }
+                               // myArray = new uint8_t [(rx.getDataLength()-1)*3+1];
 			if (comando==who){
                                 //entra una peticion who, arduino debe dar su numero de serie
 				uint8_t msg[]={'Q',0,0,0,2};
@@ -127,132 +132,98 @@ void loop() {
 				flashLed(dataLed, 3, 50);
 			}else if(comando==toread){
                                 //peticion de lectura de uno de los puertos
-                                
-                                
-                                
-                                if(rx.getData(1)==0x05){                               
-                                  //peticion de estado del led 1
-                                 uint8_t mensaje[4];    
-                                mensaje[0]=toread;
-                                mensaje[1]=0x05;
-                                 mensaje[2]=0x00;
-                                 if(led1b==true){
-                                   mensaje[3]=0xFF;
-                                   }else{
-                                     mensaje[3]=0x00;
-                                     }
-                                 ZBTxRequest zbTx = ZBTxRequest(addr64, mensaje, sizeof(mensaje));
-				xbee.send(zbTx);
-				flashLed(dataLed, 3, 50);
-				}else if(rx.getData(1)==0x01){
- 
- 
-                                  //peticion de estado del rele 1
-                                 uint8_t mensaje[4];    
-                                mensaje[0]=toread;
-                                mensaje[1]=0x01;
-                                 mensaje[2]=0x00;
+                                dirIn=1;
+                                myArray[0]=toread;
+                                for(dirOut=1;dirOut<((rx.getDataLength()-1)*3+1);dirOut++){
+                                  if(rx.getData(dirIn)==0x01){
+                                 //peticion de estado del rele 1
+                                myArray[dirOut]=0x01;
+                                 myArray[dirOut+1]=0x00;
                                  if(vrele1==true){
-                                   mensaje[3]=0xFF;
+                                   myArray[dirOut+2]=0xFF;
                                    }else{
-                                     mensaje[3]=0x00;
+                                     myArray[dirOut+3]=0x00;
                                      }
-                                 ZBTxRequest zbTx = ZBTxRequest(addr64, mensaje, sizeof(mensaje));
-				xbee.send(zbTx);
-				flashLed(dataLed, 3, 50);
-                                }else if(rx.getData(1)==0x02){
- 
- 
-                                  //peticion de estado del rele 2
-                                 uint8_t mensaje[4];    
-                                mensaje[0]=toread;
-                                mensaje[1]=0x02;
-                                 mensaje[2]=0x00;
+                                 
+                                }else if(rx.getData(dirIn)==0x02){
+                                 //peticion de estado del rele 2
+                                myArray[dirOut]=0x02;
+                                 myArray[dirOut+1]=0x00;
                                  if(vrele2==true){
-                                   mensaje[3]=0xFF;
+                                   myArray[dirOut+2]=0xFF;
                                    }else{
-                                     mensaje[3]=0x00;
+                                     myArray[dirOut+3]=0x00;
                                      }
-                                 ZBTxRequest zbTx = ZBTxRequest(addr64, mensaje, sizeof(mensaje));
-				xbee.send(zbTx);
-				flashLed(dataLed, 3, 50);
-                                }else if(rx.getData(1)==0x03){
- 
- 
-                                  //peticion de estado del rele 3
-                                 uint8_t mensaje[4];    
-                                mensaje[0]=toread;
-                                mensaje[1]=0x03;
-                                 mensaje[2]=0x00;
+                                }else if(rx.getData(dirIn)==0x03){
+                                 //peticion de estado del rele 3
+                                myArray[dirOut]=0x03;
+                                 myArray[dirOut+1]=0x00;
                                  if(vrele3==true){
-                                   mensaje[3]=0xFF;
+                                   myArray[dirOut+2]=0xFF;
                                    }else{
-                                     mensaje[3]=0x00;
+                                     myArray[dirOut+3]=0x00;
                                      }
-                                 ZBTxRequest zbTx = ZBTxRequest(addr64, mensaje, sizeof(mensaje));
-				xbee.send(zbTx);
-				flashLed(dataLed, 3, 50);
-                                }else if(rx.getData(1)==0x04){
- 
- 
-                                  //peticion de estado del rele 4
-                                 uint8_t mensaje[4];    
-                                mensaje[0]=toread;
-                                mensaje[1]=0x04;
-                                 mensaje[2]=0x00;
+                                }else if(rx.getData(dirIn)==0x04){
+                                 //peticion de estado del rele 4
+                                myArray[dirOut]=0x04;
+                                 myArray[dirOut+1]=0x00;
                                  if(vrele4==true){
-                                   mensaje[3]=0xFF;
+                                   myArray[dirOut+2]=0xFF;
                                    }else{
-                                     mensaje[3]=0x00;
+                                     myArray[dirOut+3]=0x00;
                                      }
-                                 ZBTxRequest zbTx = ZBTxRequest(addr64, mensaje, sizeof(mensaje));
-				xbee.send(zbTx);
-				flashLed(dataLed, 3, 50);
-                                }else if(rx.getData(1)==0x06){
-                                  //leer pin digital
+                                }else if(rx.getData(dirIn)==0x05){
+                                 //peticion de estado del led blanco
+                                myArray[dirOut]=0x02;
+                                 myArray[dirOut+1]=0x00;
+                                 if(led1b==true){
+                                   myArray[dirOut+2]=0xFF;
+                                   }else{
+                                     myArray[dirOut+3]=0x00;
+                                     }
+                                }else if(rx.getData(dirIn)==0x06){
+                                  //peticion de estado del led verde
 			        uint8_t mensaje[4];    
-                                mensaje[0]=toread;
-                                mensaje[1]=0x06;
-                                mensaje[2]=led2H;
-                                mensaje[3]=led2L;
-                                ZBTxRequest zbTx = ZBTxRequest(addr64, mensaje, sizeof(mensaje));
-				xbee.send(zbTx);
-                                flashLed(dataLed, 3, 50);
-                                }else if(rx.getData(1)==0x07){	
-                                  // int pin7 = analogRead(inPinD);
+                               
+                               myArray[dirOut]=0x06;
+                               myArray[dirOut+1]=led2H;
+                                myArray[dirOut+2]=led2L;
+                                
+                                }else if(rx.getData(dirIn)==0x07){	
+                                  // peticion de estado del interuptor
                                    
-                                   uint8_t mensaje[4];    
-                                    mensaje[0]=toread;
-                                    mensaje[1]=0x07;
+                                   
+                                     myArray[dirOut]=0x07;
+                                      myArray[dirOut+1]=0x00;
                                     if (digitalRead(inPinD) == HIGH){
-                                    mensaje[2]=0x00; 
-                                        mensaje[3]=0xFF; 
+                                        myArray[dirOut+2]=0xFF; 
                                   }else{
-                                  mensaje[2]=0x00; 
-                                        mensaje[3]=0x00;
-                                  }
-                                   
-                                ZBTxRequest zbTx = ZBTxRequest(addr64, mensaje, sizeof(mensaje));
-				xbee.send(zbTx);
-                                  flashLed(dataLed, 3, 50);
-                                  		
-				}else if(rx.getData(1)==0x08){
+                                        myArray[dirOut+2]=0x00;
+                                  } 		
+				}else if(rx.getData(dirIn)==0x08){
                                 //leer pin analog	
                                    int pin15 = analogRead(inPinC);
                                    
-                                   uint8_t mensaje[4];    
-                                    mensaje[0]=toread;
-                                    mensaje[1]=0x08;
-                                    mensaje[2]=pin15 >> 8 & 0xff;;
-                                   mensaje[3]=pin15 & 0xff;
-                                ZBTxRequest zbTx = ZBTxRequest(addr64, mensaje, sizeof(mensaje));
-				xbee.send(zbTx);
-                                  flashLed(dataLed, 3, 50);
+                                   
+                                    myArray[dirOut]=0x08;
+                                     myArray[dirOut+1]=pin15 >> 8 & 0xff;;
+                                  myArray[dirOut+2]=pin15 & 0xff;
+                               
                                   		
 				}else{
 					flashLed(errorLed, 2, 50);
 				}
-				uint8_t msg[]="lectura de  datos";
+                                 dirOut++;
+                                dirOut++;
+                                 dirIn++;
+                                
+                                }//fin blucle
+                              
+				ZBTxRequest zbTx = ZBTxRequest(addr64, myArray, ((rx.getDataLength()-1)*3+1));
+				xbee.send(zbTx);
+				flashLed(dataLed, 3, 50);;
+                              
+				
                                 
 				
 

@@ -142,7 +142,7 @@ void loop() {
                                  if(vrele1==true){
                                    myArray[dirOut+2]=0xFF;
                                    }else{
-                                     myArray[dirOut+3]=0x00;
+                                     myArray[dirOut+2]=0x00;
                                      }
                                  
                                 }else if(rx.getData(dirIn)==0x02){
@@ -152,7 +152,7 @@ void loop() {
                                  if(vrele2==true){
                                    myArray[dirOut+2]=0xFF;
                                    }else{
-                                     myArray[dirOut+3]=0x00;
+                                     myArray[dirOut+2]=0x00;
                                      }
                                 }else if(rx.getData(dirIn)==0x03){
                                  //peticion de estado del rele 3
@@ -161,7 +161,7 @@ void loop() {
                                  if(vrele3==true){
                                    myArray[dirOut+2]=0xFF;
                                    }else{
-                                     myArray[dirOut+3]=0x00;
+                                     myArray[dirOut+2]=0x00;
                                      }
                                 }else if(rx.getData(dirIn)==0x04){
                                  //peticion de estado del rele 4
@@ -170,7 +170,7 @@ void loop() {
                                  if(vrele4==true){
                                    myArray[dirOut+2]=0xFF;
                                    }else{
-                                     myArray[dirOut+3]=0x00;
+                                     myArray[dirOut+2]=0x00;
                                      }
                                 }else if(rx.getData(dirIn)==0x05){
                                  //peticion de estado del led blanco
@@ -179,7 +179,7 @@ void loop() {
                                  if(led1b==true){
                                    myArray[dirOut+2]=0xFF;
                                    }else{
-                                     myArray[dirOut+3]=0x00;
+                                     myArray[dirOut+2]=0x00;
                                      }
                                 }else if(rx.getData(dirIn)==0x06){
                                   //peticion de estado del led verde

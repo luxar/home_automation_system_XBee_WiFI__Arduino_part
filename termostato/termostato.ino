@@ -36,31 +36,23 @@ XBeeAddress64 addr64 = XBeeAddress64(0x00000000, 0x00000000);
 
 ZBTxStatusResponse txStatus = ZBTxStatusResponse();
 
-int statusLed = 10;
-int errorLed = 12;
-int dataLed = 11;
-int led1 = 2;
-int inPinD = 8;
+int statusLed = 48;
+int errorLed = 38;
+int dataLed = 40;
 int inPinC = A0;
-int led2 = 3;
 int rele1 = 7;
-int rele2 = 6;
-int rele3= 5;
-int rele4 = 4;
 uint8_t who = 'Q';
 uint8_t toread = 'R';
 uint8_t towrite = 'W';
-boolean led1b;
-uint8_t led2H;
-uint8_t led2L;
 boolean vrele1;
-boolean vrele2;
-boolean vrele3;
-boolean vrele4;
+boolean forzar;
 uint8_t myArray [100];
-
-int dirIn=0;
 int dirOut=0;
+int dirIn=0;
+int dirR=0;
+int valinPinC=0;
+int valObjPinC=0;
+int isteresis=4;
 void flashLed(int pin, int times, int wait) {
 
 	for (int i = 0; i < times; i++) {
@@ -78,23 +70,16 @@ void setup() {
 	pinMode(statusLed, OUTPUT);
 	pinMode(errorLed, OUTPUT);
 	pinMode(dataLed,  OUTPUT);
-	pinMode(led1,  OUTPUT);
-	pinMode(led2,  OUTPUT);
         pinMode(rele1,  OUTPUT);
-        pinMode(rele2,  OUTPUT);
-        pinMode(rele3,  OUTPUT);
-        pinMode(rele4,  OUTPUT);
-        pinMode(inPinD,  INPUT);
         pinMode(inPinC,  INPUT);
 	// start serial
 	Serial.begin(9600);
 	xbee.begin(Serial);
-        led1b = false;
-        led2L=0;
-        led2H=0;
         flashLed(errorLed, 1, 50);
-flashLed(dataLed, 3, 50);
+        flashLed(dataLed, 3, 50);
 	flashLed(statusLed, 3, 50);
+
+        forzar = false;
 }
 
 // continuously reads packets, looking for ZB Receive or Modem Status
@@ -126,7 +111,7 @@ void loop() {
                                // myArray = new uint8_t [(rx.getDataLength()-1)*3+1];
 			if (comando==who){
                                 //entra una peticion who, arduino debe dar su numero de serie
-				uint8_t msg[]={'Q',0,0,0,2};
+				uint8_t msg[]={'Q',0,0,0,4};
 				ZBTxRequest zbTx = ZBTxRequest(addr64, msg, sizeof(msg));
 				xbee.send(zbTx);
 				flashLed(dataLed, 3, 50);
@@ -136,81 +121,42 @@ void loop() {
                                 myArray[0]=toread;
                                 for(dirOut=1;dirOut<((rx.getDataLength()-1)*3+1);dirOut++){
                                   if(rx.getData(dirIn)==0x01){
-                                 //peticion de estado del rele 1
+                                 //peticion de estado forzado encendido
                                 myArray[dirOut]=0x01;
                                  myArray[dirOut+1]=0x00;
-                                 if(vrele1==true){
+                                 if(forzar==true){
                                    myArray[dirOut+2]=0xFF;
                                    }else{
                                      myArray[dirOut+2]=0x00;
                                      }
                                  
                                 }else if(rx.getData(dirIn)==0x02){
-                                 //peticion de estado del rele 2
-                                myArray[dirOut]=0x02;
-                                 myArray[dirOut+1]=0x00;
-                                 if(vrele2==true){
-                                   myArray[dirOut+2]=0xFF;
-                                   }else{
-                                     myArray[dirOut+2]=0x00;
-                                     }
-                                }else if(rx.getData(dirIn)==0x03){
-                                 //peticion de estado del rele 3
-                                myArray[dirOut]=0x03;
-                                 myArray[dirOut+1]=0x00;
-                                 if(vrele3==true){
-                                   myArray[dirOut+2]=0xFF;
-                                   }else{
-                                     myArray[dirOut+2]=0x00;
-                                     }
-                                }else if(rx.getData(dirIn)==0x04){
-                                 //peticion de estado del rele 4
-                                myArray[dirOut]=0x04;
-                                 myArray[dirOut+1]=0x00;
-                                 if(vrele4==true){
-                                   myArray[dirOut+2]=0xFF;
-                                   }else{
-                                     myArray[dirOut+2]=0x00;
-                                     }
-                                }else if(rx.getData(dirIn)==0x05){
-                                 //peticion de estado del led blanco
-                                myArray[dirOut]=0x05;
-                                 myArray[dirOut+1]=0x00;
-                                 if(led1b==true){
-                                   myArray[dirOut+2]=0xFF;
-                                   }else{
-                                     myArray[dirOut+2]=0x00;
-                                     }
-                                }else if(rx.getData(dirIn)==0x06){
-                                  //peticion de estado del led verde
-			        uint8_t mensaje[4];    
-                               
-                               myArray[dirOut]=0x06;
-                               myArray[dirOut+1]=led2H;
-                                myArray[dirOut+2]=led2L;
-                                
-                                }else if(rx.getData(dirIn)==0x07){	
-                                  // peticion de estado del interuptor
-                                   
-                                   
-                                     myArray[dirOut]=0x07;
-                                      myArray[dirOut+1]=0x00;
-                                    if (digitalRead(inPinD) == HIGH){
-                                        myArray[dirOut+2]=0xFF; 
-                                  }else{
-                                        myArray[dirOut+2]=0x00;
-                                  } 		
-				}else if(rx.getData(dirIn)==0x08){
-                                //leer pin analog	
-                                   int pin15 = analogRead(inPinC);
-                                   
-                                   
-                                    myArray[dirOut]=0x08;
-                                     myArray[dirOut+1]=pin15 >> 8 & 0xff;;
-                                  myArray[dirOut+2]=pin15 & 0xff;
+                                //Peticion de temperatura objetivo	
+                                    myArray[dirOut]=0x02;
+                                    myArray[dirOut+1]=valObjPinC >> 8 & 0xff;;
+                                    myArray[dirOut+2]=valObjPinC & 0xff;
                                
                                   		
-				}else{
+				}else if(rx.getData(dirIn)==0x03){
+                                //leer pin analog	
+                                    
+                                   
+                                   
+                                    myArray[dirOut]=0x03;
+                                     myArray[dirOut+1]=valinPinC >> 8 & 0xff;;
+                                  myArray[dirOut+2]=valinPinC & 0xff;
+                               
+                                  		
+				}else if(rx.getData(dirIn)==0x04){
+                                 //peticion de estado del rele 1
+                                myArray[dirOut]=0x04;
+                                 myArray[dirOut+1]=0x00;
+                                 if(vrele1==true){
+                                   myArray[dirOut+2]=0xFF;
+                                   }else{
+                                     myArray[dirOut+2]=0x00;
+                                     }
+                                }else{
 					flashLed(errorLed, 2, 50);
 				}
                                  dirOut++;
@@ -231,71 +177,25 @@ void loop() {
                                  //peticion de escritura
                                  
                                  for(int dirR=1;dirR<rx.getDataLength();dirR++){
-                                   if(rx.getData(dirR)==0x05){
+                                   if(rx.getData(dirR)==0x01){
                                         //escritura led 1
 					if(rx.getData(dirR+2)==0x00){
-						digitalWrite(led1, LOW);
-						led1b= false;
+						
+						forzar= false;
 					}else{
-						digitalWrite(led1, HIGH);
-						led1b= true;
+						
+						forzar= true;
 
 					}
 
-				}else if(rx.getData(dirR)==0x06){
-					//escritura analogica led 2
-					analogWrite(led2,rx.getData(dirR+2));
-                                        
-                                        led2L=rx.getData(dirR+2);
-                                        
-                                        led2H=rx.getData(dirR+1);
-                                        
-                                         
-				}else if(rx.getData(dirR)==0x01){
-					//escritura rele 1
-					if(rx.getData(dirR+2)==0x00){
-						digitalWrite(rele1, LOW);
-						vrele1= false;
-					}else{
-						digitalWrite(rele1, HIGH);
-						vrele1= true;
-
-					}
-                                         
 				}else if(rx.getData(dirR)==0x02){
-					//escritura rele2
-					if(rx.getData(dirR+2)==0x00){
-						digitalWrite(rele2, LOW);
-						vrele2= false;
-					}else{
-						digitalWrite(rele2, HIGH);
-						vrele2= true;
-
-					}
-                                         
-				}else if(rx.getData(dirR)==0x03){
-					//escritura rele3
-					if(rx.getData(dirR+2)==0x00){
-						digitalWrite(rele3, LOW);
-						vrele3= false;
-					}else{
-						digitalWrite(rele3, HIGH);
-						vrele3= true;
-
-					}
-                                         
-				}else if(rx.getData(dirR)==0x04){
-					//escritura rele 4
-					if(rx.getData(dirR+2)==0x00){
-						digitalWrite(rele4, LOW);
-						vrele4= false;
-					}else{
-						digitalWrite(rele4, HIGH);
-						vrele4= true;
-
-					}
-                                         
-				}else{
+					//escritura del valor obd
+					
+                                   uint8_t  d1=rx.getData(dirR+2);
+                                        
+                                    uint8_t  d2=rx.getData(dirR+1);
+                                         valObjPinC = ((int)d2 << 8) | d1;
+                                   }else{
 					flashLed(errorLed, 2, 50);
 				}
                                 dirR++;
@@ -353,4 +253,22 @@ void loop() {
 		//nss.print("Error reading packet.  Error code: ");  
 		//nss.println(xbee.getResponse().getErrorCode());
 	}
+valinPinC = analogRead(inPinC);
+if(forzar== true)
+{
+  digitalWrite(rele1,HIGH);
+  vrele1=true;
+} else if( valinPinC>isteresis+valObjPinC){
+  digitalWrite(rele1,LOW);
+  vrele1=false;
+  
+  }else if(valinPinC<isteresis-valObjPinC){
+    digitalWrite(rele1,HIGH);
+  vrele1=true;
+    }
+
+
+
+
+
 }

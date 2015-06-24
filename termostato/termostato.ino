@@ -258,11 +258,11 @@ if(forzar== true)
 {
   digitalWrite(rele1,HIGH);
   vrele1=true;
-} else if( valinPinC>isteresis+valObjPinC){
+} else if( valinPinC>(isteresis+valObjPinC)){
   digitalWrite(rele1,LOW);
   vrele1=false;
   
-  }else if(valinPinC<isteresis-valObjPinC){
+  }else if(valinPinC<(valObjPinC-isteresis)){
     digitalWrite(rele1,HIGH);
   vrele1=true;
     }
